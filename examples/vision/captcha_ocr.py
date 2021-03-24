@@ -34,14 +34,13 @@ from tensorflow.keras import layers
 
 
 """
-## Load the data: [Captcha Images](https://www.kaggle.com/fournierp/captcha-version-2-images)
+## Load the data: [Captcha Images](https://www.upload.ee/files/12990792/captcha_images.zip.html)
 Let's download the data.
 """
 
 
 """shell
-curl -LO https://github.com/AakashKumarNain/CaptchaCracker/raw/master/captcha_images_v2.zip
-unzip -qq captcha_images_v2.zip
+unzip -qq captcha_images.zip
 """
 
 
@@ -56,13 +55,15 @@ respectively.
 
 
 # Path to the data directory
-data_dir = Path("./captcha_images_v2/")
+data_dir = Path("./captcha_images/")
 
 # Get list of all the images
 images = sorted(list(map(str, list(data_dir.glob("*.png")))))
-labels = [img.split(os.path.sep)[-1].split(".png")[0] for img in images]
-characters = set(char for label in labels for char in label)
-
+# first character must be 0 or 1 for possible write files with same text
+# 2,3,4,5 characters contain text
+labels = [img.split(os.path.sep)[-1].split(".png")[0][1:] for img in images]
+# list of possible characters
+characters = ['2','3','4','5','6','7','9','A','C','D','E','F','H','J','K','L','M','N','P','R','S','T','U','V','W','X','Y','Z']
 print("Number of images found: ", len(images))
 print("Number of labels found: ", len(labels))
 print("Number of unique characters: ", len(characters))
@@ -72,7 +73,7 @@ print("Characters present: ", characters)
 batch_size = 16
 
 # Desired image dimensions
-img_width = 200
+img_width = 150
 img_height = 50
 
 # Factor by which the image is going to be downsampled
@@ -288,7 +289,8 @@ history = model.fit(
     epochs=epochs,
     callbacks=[early_stopping],
 )
-
+# save trained model
+model.save('full_model.h5', save_format='h5')
 
 """
 ## Inference
@@ -300,6 +302,8 @@ prediction_model = keras.models.Model(
     model.get_layer(name="image").input, model.get_layer(name="dense2").output
 )
 prediction_model.summary()
+# save model for prediction only
+prediction_model.save('prediction_model.h5', save_format='h5')
 
 # A utility function to decode the output of the network
 def decode_batch_predictions(pred):
